@@ -11,6 +11,9 @@ const projectLinkID = 'projectnameoralphanumericprojectlinkid' // Replace with p
 const limit = 50
 const apiBaseURL = ( org == '' ? 'https://api.crowdin.com/api/v2' : `https://${org}.api.crowdin.com/api/v2` )
 
+const header = [['iID', 'File ID / \nName', 'Str\nID', 'Date', 'User', 'Status', 'Issue Type', 'Lang', 'String', 'Issue/Comment', 'Context']]
+const colWidths = [40, 100, 50, 100, 110, 80, 80, 50, 230, 450, 450]
+
 //
 // Adding functions to the menu
 //
@@ -182,8 +185,8 @@ function overwriteWithIssuesFromCrowdin() {
   var dataRange = sheet.getDataRange()
   var lastColumn = dataRange.getLastColumn()
   
-  var header = [['iID', 'File ID / \nName', 'Str\nID', 'Date', 'User', 'Status', 'Issue Type', 'Lang', 'String', 'Issue/Comment', 'Context']];
   sheet.getRange(1,1,1,lastColumn).setValues(header).setFontColor('#f3f3f3').setBackground('#434343').setFontWeight('bold');
+  colWidths.map((width, col) => {sheet.setColumnWidth(col + 1, width)})
   sheet.setFrozenRows(1);
 
   sheet.getRange(2, 1, dataRange.getLastRow(), lastColumn).clearContent()
