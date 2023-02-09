@@ -23,6 +23,27 @@ function onOpen() {
 }
 
 //
+// Get API token from user
+//
+
+function getTokenPrompt() {
+  var ui = SpreadsheetApp.getUi()
+  var result = ui.prompt("Please enter the Crowdin API token (don't share your token anywhere!)")
+  
+  //Get the button that the user pressed.
+  var button = result.getSelectedButton()
+  
+  if (button === ui.Button.OK) {
+    Logger.log("Got the token from the user.")
+    return result.getResponseText()
+  } else if (button === ui.Button.CLOSE) {
+    Logger.log("Script cancelled, user haven't supplied the API token")
+    return null
+  }
+    
+}
+
+//
 // Downloading file list from Crowdin (to have names)
 //
 
