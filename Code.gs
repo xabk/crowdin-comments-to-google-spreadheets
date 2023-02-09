@@ -3,7 +3,7 @@ var ui = SpreadsheetApp.getUi()
 
 // ---  Script Parameters: see Readme.md for details   ---
 const token = 'hexadecimaltokenthingy' // Replace with your Crowdin API token
-const org = 'org_name' // Replace with your organization name or leave blank if you're using Crowdin.com
+const org = '' // Replace with your organization name or leave blank if you're using Crowdin.com
 const projectID = 1 // Replace with Project ID (under Tools → API on Crowdin)
 const projectLinkID = 'projectnameoralphanumericprojectlinkid' // Replace with project name (Crowdin.com) or project link ID (Enterprise)
 // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
