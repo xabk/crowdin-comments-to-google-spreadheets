@@ -4,6 +4,7 @@
 #TODO:
 - Get link IDs automatically
 - Update API token scope requirements
+- *Warning that API token will be available to anyone who can access the spreadsheet*
 
 Warning: this script exports a *static* copy of all the comments and issues from a project on Crowdin. Any edits on the resulting sheet *will not* be reflected on Crowdin, and if you rerun the script, they *will be overwritten* with new data from Crowdin.
 
@@ -20,7 +21,8 @@ Warning: this script exports a *static* copy of all the comments and issues from
 ## Crowdin API parameters
 ### API token
 - You can use an account with `Translator` rights or above to create an API token
-- Scopes needed: `Projects` → `Translation Status` (#TODO: confirm if that's enough)
+- Scopes needed: `Projects` → `Project` and `Source Files`
+- It's also a good idea to enable `Granular Access` and limit the token to a specific project
 ### Project ID
 - You can see it under `Tools` → `API`
 ### Project Link ID
