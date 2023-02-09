@@ -19,7 +19,7 @@ const colWidths = [40, 100, 50, 100, 110, 80, 80, 50, 230, 450, 450]
 //
  
 function onOpen() {
-  ui.createMenu('SoC Tools')
+  ui.createMenu('Loc Tools')
   .addItem('Pull comments and issues from Crowdin', 'overwriteWithIssuesFromCrowdin')
 //  .addSeparator()
   .addToUi()
