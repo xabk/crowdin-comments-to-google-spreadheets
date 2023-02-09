@@ -1,6 +1,10 @@
 # Crowdin comments to Google spreadheets
 *Google Apps Script to pull comments and issues to a Google Spreadsheet*
 
+#TODO:
+- Get link IDs automatically
+- Update API token scope requirements
+
 Warning: this script exports a *static* copy of all the comments and issues from a project on Crowdin. Any edits on the resulting sheet *will not* be reflected on Crowdin, and if you rerun the script, they *will be overwritten* with new data from Crowdin.
 
 ## Installation
