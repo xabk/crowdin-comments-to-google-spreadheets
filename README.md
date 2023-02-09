@@ -4,10 +4,10 @@
 #TODO:
 - Get link IDs automatically
 - Add headers/formatting automatically
-- Update API token scope requirements
-- *Warning that API token will be available to anyone who can access the spreadsheet*
 
-Warning: this script exports a *static* copy of all the comments and issues from a project on Crowdin. Any edits on the resulting sheet *will not* be reflected on Crowdin, and if you rerun the script, they *will be overwritten* with new data from Crowdin.
+This script exports a *static* copy of all the comments and issues from a project on Crowdin. Any edits on the resulting sheet *will not* be reflected on Crowdin, and if you rerun the script, they *will be overwritten* with new data from Crowdin.
+
+**Warning: your API token will be available to anyone you share the spreadsheet with. So it's best to create a separate account with limited rights for this, and also limit the API token scope to the absolute minimum (see below).**
 
 ## Installation
 - Open Google Apps Script editor via the menu in your spreadsheet: `Extensions` → `Apps Script`
