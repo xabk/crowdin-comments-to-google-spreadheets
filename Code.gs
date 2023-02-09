@@ -2,10 +2,11 @@ var ss = SpreadsheetApp.getActiveSpreadsheet()
 var ui = SpreadsheetApp.getUi()
 
 // ---  Script Parameters: see Readme.md for details   ---
-const token = 'hexadecimaltokenthingy' // Replace with your Crowdin API token
+var token = '' // Replace with your Crowdin API token or leave empty and you'll be prompted for it every time you use the script
+// WARNING: only you save your API token here if the spreadsheet is never shared outside your trusted circle
+// WARNING: API token saved here will be freely available to anyone who has access to the spreadsheet
 const org = '' // Replace with your organization name or leave blank if you're using Crowdin.com
 const projectID = 1 // Replace with Project ID (under Tools → API on Crowdin)
-const projectLinkID = 'projectnameoralphanumericprojectlinkid' // Replace with project name (Crowdin.com) or project link ID (Enterprise)
 // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
 const limit = 50
@@ -43,7 +44,33 @@ function getTokenPrompt() {
     Logger.log("Script cancelled, user haven't supplied the API token")
     return null
   }
-    
+}
+
+//
+// Get Project Link ID
+// (project name on Crowdin.com or alphanumeric project ID used for URLs in Crowdin Enterprise)
+//
+
+function getProjectLinkID() {
+  if(token == ''){
+    token = getTokenPrompt()
+    if(token == null){
+      return null
+    }
+  }
+  var url = `${apiBaseURL}/projects/${projectID}`
+  var options = {
+    'muteHttpExceptions': true,
+    'headers': {
+      'Authorization': `Bearer ${token}`
+    }
+  }
+  var response = UrlFetchApp.fetch(url, options)
+
+  // Make request to API and get response before this point.
+  var json = response.getContentText();
+  var data = JSON.parse(json);
+  return data.data.identifier
 }
 
 //
@@ -51,6 +78,12 @@ function getTokenPrompt() {
 //
 
 function downloadFileNamesFromCrowdin() {
+  if(token == ''){
+    token = getTokenPrompt()
+    if(token == null){
+      return null
+    }
+  }
   var url = `${apiBaseURL}/projects/${projectID}/files?limit=500`
   var options = {
     'muteHttpExceptions': true,
@@ -82,6 +115,8 @@ function downloadFileNamesFromCrowdin() {
 //
 
 function downloadIssuesFromCrowdin() {
+  var projectLinkID = getProjectLinkID()
+
   var offset = 0
   var url = `${apiBaseURL}/projects/${projectID}/comments?limit=${limit}&offset=`
   var options = {
