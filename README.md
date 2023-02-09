@@ -15,10 +15,12 @@ This script exports a *static* copy of all the comments and issues from a projec
 - Go back to the Editor using the angled brackets icon on the left toolbar
 - Copy the contents of the `appsscript.json` file here to the `appsscript.json` file in the editor
 - Copy the contents of the `Code.gs` file here to the `Code.gs` file in the editor
-- Paste you API token on `line 5` (see `Crowdin API parameters` below)
 - Paste your organization name on `line 6` or leave it blank if you're using crowdin.com (see `Crowdin API parameters` below)
 - Specify the project ID on `line 7` (see `Crowdin API parameters` below)
-- Paste the project link ID on `line 8` (see `Crowdin API parameters` below)
+
+- **Don't do this unless you know what you're doing.** You can also paste you API token on `line 5` (see `Crowdin API parameters` below). 
+
+**WARNING**: Only save your API token in script source code if you're absolutely certain that your spreadsheet will only be shared within the trusted circle. Token saved in script source code will be available to anyone who has access to the spreadsheet. It is not recommended to save your token if you share the spreadsheet with outsiders.
 
 ## Crowdin API parameters
 ### API token
