@@ -182,7 +182,12 @@ function overwriteWithIssuesFromCrowdin() {
   var dataRange = sheet.getDataRange()
   var lastColumn = dataRange.getLastColumn()
   
+  var header = [['iID', 'File ID / \nName', 'Str\nID', 'Date', 'User', 'Status', 'Issue Type', 'Lang', 'String', 'Issue/Comment', 'Context']];
+  sheet.getRange(1,1,1,lastColumn).setValues(header).setFontColor('#f3f3f3').setBackground('#434343').setFontWeight('bold');
+  sheet.setFrozenRows(1);
+
   sheet.getRange(2, 1, dataRange.getLastRow(), lastColumn).clearContent()
+  sheet.getRange(2, 1, dataRange.getLastRow(), lastColumn).setBorder(false, false, false, false, false, false)
 
   issueArray = new Array()
   stringIDsAndLinks = new Array()
