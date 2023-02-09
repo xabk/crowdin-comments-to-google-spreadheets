@@ -3,6 +3,7 @@
 
 #TODO:
 - Get link IDs automatically
+- Add headers/formatting automatically
 - Update API token scope requirements
 - *Warning that API token will be available to anyone who can access the spreadsheet*
 
