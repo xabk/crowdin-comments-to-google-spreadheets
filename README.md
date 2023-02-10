@@ -27,12 +27,6 @@ This script exports a *static* copy of all the comments and issues from a projec
 - It's also a good idea to enable `Granular Access` and limit the token to a specific project
 ### Project ID
 - You can see it under `Tools` → `API`
-### Project Link ID
-- This it needed to generate direct links to strings so that you could easily open them on Crowdin.
-- It's the part of the file URL that goes after `translate` or `proofread`.
-- Open any file, take a look at the URL, you need the highlighted part:
-- Crowdin.com: `https://crowdin.com/translate/`*projectname*`/80/en-enprt` — or you can just use the project name from Settings
-- Crowdin Enterprise: `https://organization.crowdin.com/translate/`*a8a0b3b69ccb4d4460720ca9ffccc813*`/all/en-sv/49`
 
 ## Usage
 - After you install the script and refresh the spreadsheet, you'll see `Loc Tools` in the Spreadsheets main menu
