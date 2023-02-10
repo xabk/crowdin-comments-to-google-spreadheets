@@ -38,3 +38,4 @@ This script exports a *static* copy of all the comments and issues from a projec
 - After you install the script and refresh the spreadsheet, you'll see `Loc Tools` in the Spreadsheets main menu
 - Use the `Pull comments and issues from Crowdin` menu item to download all comments and issues from the project and *overwrite the contents of the active sheet*
 - The script will ask you for permission to access the spreadsheet it's installed in and to communicate with external services when you run it for the first time
+- If you haven't saved the API token within the script, it will ask you for it when you launch it
