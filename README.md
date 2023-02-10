@@ -5,8 +5,6 @@
 
 This script exports a *static* copy of all the comments and issues from a project on Crowdin. Any edits on the resulting sheet *will not* be reflected on Crowdin, and if you rerun the script, they *will be overwritten* with new data from Crowdin.
 
-**Warning: your API token will be available to anyone you share the spreadsheet with. So it's best to create a separate account with limited rights for this, and also limit the API token scope to the absolute minimum (see below).**
-
 ## Installation
 - Open Google Apps Script editor via the menu in your spreadsheet: `Extensions` → `Apps Script`
 - Open `Project Settings` using the cog icong on the left toolbar and check the `Show "appscript.json" manifest file in editor` checkbox
@@ -15,16 +13,16 @@ This script exports a *static* copy of all the comments and issues from a projec
 - Copy the contents of the `Code.gs` file here to the `Code.gs` file in the editor
 - Paste your organization name on `line 6` or leave it blank if you're using crowdin.com (see `Crowdin API parameters` below)
 - Specify the project ID on `line 7` (see `Crowdin API parameters` below)
-
 - **Don't do this unless you know what you're doing.** You can also paste you API token on `line 5` (see `Crowdin API parameters` below). 
 
 **WARNING**: Only save your API token in script source code if you're absolutely certain that your spreadsheet will only be shared within the trusted circle. Token saved in script source code will be available to anyone who has access to the spreadsheet. It is not recommended to save your token if you share the spreadsheet with outsiders.
 
 ## Crowdin API parameters
 ### API token
-- You can use an account with `Translator` rights or above to create an API token
+It's best to create a separate account with limited rights and then create an token with ilmited scope for this.
+- You can create or use any account with `Translator` rights or above to create an API token
 - Scopes needed: `Projects` → `Project` and `Source Files`
-- It's also a good idea to enable `Granular Access` and limit the token to a specific project
+- Enterprise: It's also a good idea to enable `Granular Access` and limit the token to a specific project
 ### Project ID
 - You can see it under `Tools` → `API`
 
