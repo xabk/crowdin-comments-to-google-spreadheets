@@ -178,7 +178,7 @@ function downloadIssuesFromCrowdin() {
     issue.fileID = issueData.string.fileId
     issue.fileIDandName = `${issueData.string.fileId}\n\n${files.get(issueData.string.fileId)}`
 
-    issue.link = `https://csp.crowdin.com/translate/${projectLinkID}/all/en-XX#${issue.stringID}`
+    issue.link = ( org == '' ? `https://crowdin.com/translate/${projectLinkID}/all/en-XX#${issue.stringID}` : `https://${org}.crowdin.com/translate/${projectLinkID}/all/en-XX#${issue.stringID}` )
 
     issues.push(issue)
   }
