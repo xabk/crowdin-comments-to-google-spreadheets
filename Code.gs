@@ -178,7 +178,8 @@ function downloadIssuesFromCrowdin() {
     issue.fileID = issueData.string.fileId
     issue.fileIDandName = `${issueData.string.fileId}\n\n${files.get(issueData.string.fileId)}`
 
-    issue.link = ( org == '' ? `https://crowdin.com/translate/${projectLinkID}/all/en-XX#${issue.stringID}` : `https://${org}.crowdin.com/translate/${projectLinkID}/all/en-XX#${issue.stringID}` )
+    issue.link = ( org == '' ? `https://crowdin.com/translate/${projectLinkID}/all/en-XX#${issue.stringID}` 
+                             : `https://${org}.crowdin.com/translate/${projectLinkID}/all/en-XX#${issue.stringID}` )
 
     issues.push(issue)
   }
@@ -219,6 +220,14 @@ function overwriteWithIssuesFromCrowdin() {
   var sheet = SpreadsheetApp.getActiveSheet()
   var dataRange = sheet.getDataRange()
   var lastColumn = dataRange.getLastColumn()
+  var maxColumns = sheet.getMaxColumns()
+  
+  if(maxColumns < 11){
+    sheet.insertColumnsAfter(maxColumns,11 - maxColumns)
+  }
+  if(lastColumn < 11){
+    lastColumn = 11
+  }
   
   sheet.getRange(1,1,1,lastColumn).setValues(header).setFontColor('#f3f3f3').setBackground('#434343').setFontWeight('bold');
   colWidths.map((width, col) => {sheet.setColumnWidth(col + 1, width)})
