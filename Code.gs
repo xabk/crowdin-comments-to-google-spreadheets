@@ -1,19 +1,18 @@
-var ss = SpreadsheetApp.getActiveSpreadsheet()
-var ui = SpreadsheetApp.getUi()
-
 // ---  Script Parameters: see Readme.md for details   ---
 var token = '' // Replace with your Crowdin API token or leave empty and you'll be prompted for it every time you use the script
 // WARNING: only you save your API token here if the spreadsheet is never shared outside your trusted circle
 // WARNING: API token saved here will be freely available to anyone who has access to the spreadsheet
 const org = '' // Replace with your organization name or leave blank if you're using Crowdin.com
 const projectID = 1 // Replace with Project ID (under Tools → API on Crowdin)
+const header = [['iID', 'File ID / \nName', 'Str\nID', 'Date', 'User', 'Status', 'Issue Type', 'String', 'Issue/Comment', 'Context']]
+const colWidths = [40, 100, 50, 100, 110, 80, 80, 230, 450, 450]
 // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
 const limit = 50
 const apiBaseURL = ( org == '' ? 'https://api.crowdin.com/api/v2' : `https://${org}.api.crowdin.com/api/v2` )
 
-const header = [['iID', 'File ID / \nName', 'Str\nID', 'Date', 'User', 'Status', 'Issue Type', 'Lang', 'String', 'Issue/Comment', 'Context']]
-const colWidths = [40, 100, 50, 100, 110, 80, 80, 50, 230, 450, 450]
+var ss = SpreadsheetApp.getActiveSpreadsheet()
+var ui = SpreadsheetApp.getUi()
 
 //
 // Adding functions to the menu
@@ -219,14 +218,11 @@ function overwriteWithIssuesFromCrowdin() {
 
   var sheet = SpreadsheetApp.getActiveSheet()
   var dataRange = sheet.getDataRange()
-  var lastColumn = dataRange.getLastColumn()
+  var lastColumn = header[0].length
   var maxColumns = sheet.getMaxColumns()
   
-  if(maxColumns < 11){
-    sheet.insertColumnsAfter(maxColumns,11 - maxColumns)
-  }
-  if(lastColumn < 11){
-    lastColumn = 11
+  if(maxColumns < header[0].length){
+    sheet.insertColumnsAfter(maxColumns, header[0].length - maxColumns)
   }
   
   sheet.getRange(1,1,1,lastColumn).setValues(header).setFontColor('#f3f3f3').setBackground('#434343').setFontWeight('bold');
