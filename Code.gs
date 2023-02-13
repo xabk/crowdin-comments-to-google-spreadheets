@@ -15,17 +15,6 @@ var ss = SpreadsheetApp.getActiveSpreadsheet()
 var ui = SpreadsheetApp.getUi()
 
 //
-// Adding functions to the menu
-//
- 
-function onOpen() {
-  ui.createMenu('Loc Tools')
-  .addItem('Pull comments and issues from Crowdin', 'overwriteWithIssuesFromCrowdin')
-//  .addSeparator()
-  .addToUi()
-}
-
-//
 // Get API token from user
 //
 
@@ -43,6 +32,7 @@ function getTokenPrompt() {
     Logger.log("Script cancelled, user haven't supplied the API token")
     return null
   }
+    
 }
 
 //
@@ -73,16 +63,21 @@ function getProjectLinkID() {
 }
 
 //
+// Adding functions to the menu
+//
+ 
+function onOpen() {
+  ui.createMenu('SoC Tools')
+  .addItem('Pull comments and issues from Crowdin', 'overwriteWithIssuesFromCrowdin')
+//  .addSeparator()
+  .addToUi()
+}
+
+//
 // Downloading file list from Crowdin (to have names)
 //
 
 function downloadFileNamesFromCrowdin() {
-  if(token == ''){
-    token = getTokenPrompt()
-    if(token == null){
-      return null
-    }
-  }
   var url = `${apiBaseURL}/projects/${projectID}/files?limit=500`
   var options = {
     'muteHttpExceptions': true,
@@ -115,7 +110,6 @@ function downloadFileNamesFromCrowdin() {
 
 function downloadIssuesFromCrowdin() {
   var projectLinkID = getProjectLinkID()
-
   var offset = 0
   var url = `${apiBaseURL}/projects/${projectID}/comments?limit=${limit}&offset=`
   var options = {
@@ -170,14 +164,15 @@ function downloadIssuesFromCrowdin() {
 
     issue.userID = issueData.userId
     issue.user = issueData.user.username
-    if (issueData.user.fullName) {
-       issue.user += `\n${issueData.user.fullName}\n\nLang: ${issue.language}`
+    if (issueData.user.fullName & issueData.user.fullName != issueData.user.username) {
+       issue.user += `\n${issueData.user.fullName}`
     }
+    issue.user += `\n\nLang: ${issue.language}`
 
     issue.fileID = issueData.string.fileId
     issue.fileIDandName = `${issueData.string.fileId}\n\n${files.get(issueData.string.fileId)}`
 
-    issue.link = ( org == '' ? `https://crowdin.com/translate/${projectLinkID}/all/en-XX#${issue.stringID}` 
+    issue.link = ( org == '' ? `https://crowdin.com/translate/${projectLinkID}/all/en-XX#${issue.stringID}`
                              : `https://${org}.crowdin.com/translate/${projectLinkID}/all/en-XX#${issue.stringID}` )
 
     issues.push(issue)
@@ -196,6 +191,7 @@ function downloadIssuesFromCrowdin() {
     if (!issuesMap.has(issue.stringID)) {
             issuesMap.set(issue.stringID, [issue])
         } else {
+            issue.fileIDandName = ''
             issue.stringText = ''
             issue.context = ''
             issuesMap.get(issue.stringID).push(issue)
@@ -229,14 +225,14 @@ function overwriteWithIssuesFromCrowdin() {
   colWidths.map((width, col) => {sheet.setColumnWidth(col + 1, width)})
   sheet.setFrozenRows(1);
 
-  sheet.getRange(2, 1, dataRange.getLastRow(), lastColumn).clearContent()
-  sheet.getRange(2, 1, dataRange.getLastRow(), lastColumn).setBorder(false, false, false, false, false, false)
-
+  sheet.getRange(2, 1, dataRange.getLastRow(), dataRange.getLastColumn()).clearContent().setWrap(true)
+  sheet.getRange(2, 1, dataRange.getLastRow(), dataRange.getLastColumn()).setBorder(false, false, false, false, false, false)
+  
   issueArray = new Array()
   stringIDsAndLinks = new Array()
 
   for (i of issues) {
-    issueArray.push([i.id, i.fileIDandName, i.stringID, i.date, i.user, i.status, i.type, i.language, i.stringText, i.text, i.context])
+    issueArray.push([i.id, i.fileIDandName, i.stringID, i.date, i.user, i.status, i.type, i.stringText, i.text, i.context])
     stringIDsAndLinks.push([createRichTextLink(i.stringID, i.link)])
 
 /*  let styleGrey = SpreadsheetApp.newTextStyle().setForegroundColor('#aaa').build()
@@ -244,7 +240,7 @@ function overwriteWithIssuesFromCrowdin() {
                     .setText(i.fileIDandName)
                     .setTextStyle(0, String(i.fileID).length, styleGrey)
                     .build()
-    var row = [i.id, fileIDandName, i.stringID, i.date, i.user, i.status, i.type, i.language, i.text, i.stringText, i.context]
+    var row = [i.id, fileIDandName, i.stringID, i.date, i.user, i.status, i.type, i.text, i.stringText, i.context]
     row = row.map(function(item){
       if (item.getRuns) {
         return item
@@ -257,7 +253,6 @@ function overwriteWithIssuesFromCrowdin() {
   }
 
   sheet.getRange(2, 1, dataRange.getLastRow(), lastColumn).clearContent()
-  sheet.getRange(2, 1, dataRange.getLastRow(), lastColumn).setBorder(false, false, false, false, false, false)
   sheet.getRange(2, 1, issueArray.length, issueArray[0].length).setValues(issueArray)
 
   sheet.getRange(2, 3, issueArray.length).setRichTextValues(stringIDsAndLinks)
@@ -269,6 +264,11 @@ function overwriteWithIssuesFromCrowdin() {
      /* .setBackground('#eeeeee') */
     }
   }
+
+  sheet.getRange(2, 1, issueArray.length, lastColumn).setFontColor('#000')
+  sheet.getRange(2, 1, issueArray.length, 2).setFontColor('#555')
+  sheet.getRange(2, 3, issueArray.length, 1).setFontColor('#1155cc')
+  sheet.getRange(2, 4, issueArray.length, 4).setFontColor('#555')
 }
 
 //
@@ -280,7 +280,7 @@ function prettylog(object){
 }
 
 function decodeHTMLEntities(string){
-  return string.replace(/&(quot);/g, '"').replace(/&(amp);/g, '&')
+  return string.replace(/&quot;/g, '"').replace(/&amp;/g, '&')
   // return XmlService.parse(`<d>${string}</d>`).getRootElement().getText() // Doesn't work with Unreal rich text tags (<hunter>...</>)
 }
 
@@ -288,4 +288,13 @@ function createRichTextLink(string, link){
   if (link) {
     return SpreadsheetApp.newRichTextValue().setText(string).setLinkUrl(0,String(string).length, link).build()
   }
+
+/*  var styleGrey = SpreadsheetApp.newTextStyle().setForegroundColor('#aaa').build()
+  var fileIDandName = SpreadsheetApp.newRichTextValue()
+                      .setText(i.fileIDandName)
+                      .setTextStyle(0, String(i.fileID).length, styleGrey)
+                      .build()
+*/
+
+//  return SpreadsheetApp.newRichTextValue().setText(item).build()
 }
