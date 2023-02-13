@@ -4,9 +4,16 @@ var token = '' // Replace with your Crowdin API token or leave empty and you'll 
 // WARNING: API token saved here will be freely available to anyone who has access to the spreadsheet
 const org = '' // Replace with your organization name or leave blank if you're using Crowdin.com
 const projectID = 1 // Replace with Project ID (under Tools → API on Crowdin)
-const header = [['iID', 'File ID / \nName', 'Str\nID', 'Date', 'User', 'Status', 'Issue Type', 'String', 'Issue/Comment', 'Context']]
 const colWidths = [40, 100, 50, 100, 110, 80, 80, 230, 450, 450]
 // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+const wrClip = SpreadsheetApp.WrapStrategy.CLIP
+const wrWrap = SpreadsheetApp.WrapStrategy.WRAP
+
+const header = [['iID', 'File ID / \nName', 'Str\nID', 'Date', 'User', 'Status', 'Issue Type', 'String', 'Issue/Comment', 'Context']]
+const colWidths = [40, 100, 50, 100, 110, 80, 80, 230, 450, 450]
+const colFontColors = ['#555', '#555', '#1155cc', '#555', '#555', '#555', '#555', '#000', '#000', '#000']
+const wrapStrategies = [wrClip, wrClip, wrClip, wrClip, wrClip, wrWrap, wrWrap, wrWrap, wrWrap, wrClip]
 
 const limit = 50
 const apiBaseURL = ( org == '' ? 'https://api.crowdin.com/api/v2' : `https://${org}.api.crowdin.com/api/v2` )
@@ -224,9 +231,9 @@ function overwriteWithIssuesFromCrowdin() {
   sheet.getRange(1,1,1,lastColumn).setValues(header).setFontColor('#f3f3f3').setBackground('#434343').setFontWeight('bold');
   colWidths.map((width, col) => {sheet.setColumnWidth(col + 1, width)})
   sheet.setFrozenRows(1);
-
-  sheet.getRange(2, 1, dataRange.getLastRow(), dataRange.getLastColumn()).clearContent().setWrap(true)
-  sheet.getRange(2, 1, dataRange.getLastRow(), dataRange.getLastColumn()).setBorder(false, false, false, false, false, false)
+  
+  sheet.getRange(2, 1, sheet.getMaxRows() - 1, sheet.getMaxColumns()).clearContent()
+  sheet.getRange(2, 1, sheet.getMaxRows() - 1, sheet.getMaxColumns()).setBorder(false, false, false, false, false, false)
   
   issueArray = new Array()
   stringIDsAndLinks = new Array()
@@ -265,10 +272,9 @@ function overwriteWithIssuesFromCrowdin() {
     }
   }
 
-  sheet.getRange(2, 1, issueArray.length, lastColumn).setFontColor('#000')
-  sheet.getRange(2, 1, issueArray.length, 2).setFontColor('#555')
-  sheet.getRange(2, 3, issueArray.length, 1).setFontColor('#1155cc')
-  sheet.getRange(2, 4, issueArray.length, 4).setFontColor('#555')
+  wrapStrategies.map((strat, col) => {sheet.getRange(2, col + 1, sheet.getDataRange().getLastRow(), 1).setWrapStrategy(strat)})
+  colFontColors.map((color, col) => {sheet.getRange(2, col + 1, sheet.getDataRange().getLastRow(), 1).setFontColor(color)})
+  
 }
 
 //
