@@ -4,7 +4,6 @@ var token = '' // Replace with your Crowdin API token or leave empty and you'll 
 // WARNING: API token saved here will be freely available to anyone who has access to the spreadsheet
 const org = '' // Replace with your organization name or leave blank if you're using Crowdin.com
 const projectID = 1 // Replace with Project ID (under Tools → API on Crowdin)
-const colWidths = [40, 100, 50, 100, 110, 80, 80, 230, 450, 450]
 // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
 const wrClip = SpreadsheetApp.WrapStrategy.CLIP
@@ -26,7 +25,6 @@ var ui = SpreadsheetApp.getUi()
 //
 
 function getTokenPrompt() {
-  var ui = SpreadsheetApp.getUi()
   var result = ui.prompt("Please enter the Crowdin API token (don't share your token anywhere!)")
   
   //Get the button that the user pressed.
@@ -39,7 +37,6 @@ function getTokenPrompt() {
     Logger.log("Script cancelled, user haven't supplied the API token")
     return null
   }
-    
 }
 
 //
@@ -274,7 +271,7 @@ function overwriteWithIssuesFromCrowdin() {
 
   wrapStrategies.map((strat, col) => {sheet.getRange(2, col + 1, sheet.getDataRange().getLastRow(), 1).setWrapStrategy(strat)})
   colFontColors.map((color, col) => {sheet.getRange(2, col + 1, sheet.getDataRange().getLastRow(), 1).setFontColor(color)})
-  
+  sheet.getRange(1, 1, sheet.getMaxRows(), sheet.getMaxColumns()).setFontFamily('Calibri').setFontSize(11)
 }
 
 //
