@@ -1,10 +1,14 @@
 // ---  Script Parameters: see Readme.md for details   ---
-var token = '' // Replace with your Crowdin API token or leave empty and you'll be prompted for it every time you use the script
-// WARNING: only you save your API token here if the spreadsheet is never shared outside your trusted circle
-// WARNING: API token saved here will be freely available to anyone who has access to the spreadsheet
 const org = '' // Replace with your organization name or leave blank if you're using Crowdin.com
 const projectID = 1 // Replace with Project ID (under Tools → API on Crowdin)
 // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+// --- Don't change this unless you know what you're doing ---
+var token = ''
+// Replace with your Crowdin API token or leave empty and you'll be prompted for it every time you use the script
+// WARNING: only you save your API token here if the spreadsheet is never shared outside your trusted circle
+// WARNING: API token saved here will be freely available to anyone who has access to the spreadsheet
+// --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
 const wrClip = SpreadsheetApp.WrapStrategy.CLIP
 const wrWrap = SpreadsheetApp.WrapStrategy.WRAP
