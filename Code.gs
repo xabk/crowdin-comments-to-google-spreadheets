@@ -269,9 +269,18 @@ function overwriteWithIssuesFromCrowdin() {
     }
   }
 
-  wrapStrategies.map((strat, col) => {sheet.getRange(2, col + 1, sheet.getDataRange().getLastRow(), 1).setWrapStrategy(strat)})
-  colFontColors.map((color, col) => {sheet.getRange(2, col + 1, sheet.getDataRange().getLastRow(), 1).setFontColor(color)})
   sheet.getRange(1, 1, sheet.getMaxRows(), sheet.getMaxColumns()).setFontFamily('Calibri').setFontSize(11)
+
+  wrapStrategies.map((strat, col) => {sheet.getRange(2, col + 1, sheet.getDataRange().getLastRow(), 1).setWrapStrategy(strat)})
+
+  colFontColors.map((color, col) => {sheet.getRange(2, col + 1, sheet.getDataRange().getLastRow(), 1).setFontColor(color)})
+  
+  sheet.setConditionalFormatRules(
+    [SpreadsheetApp.newConditionalFormatRule()
+    .whenFormulaSatisfied('=AND($F2="Open",$G2="Source Mistake")')
+    .setBackground('#fff2cc')
+    .setRanges([sheet.getRange(2, 1, sheet.getLastRow(), 10)]).build()]
+  )
 }
 
 //
