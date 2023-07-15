@@ -18,29 +18,21 @@ const colWidths = [40, 100, 50, 100, 110, 80, 80, 230, 450, 450]
 const colFontColors = ['#555', '#555', '#1155cc', '#555', '#555', '#555', '#555', '#000', '#000', '#000']
 const wrapStrategies = [wrClip, wrClip, wrClip, wrClip, wrClip, wrWrap, wrWrap, wrWrap, wrWrap, wrClip]
 
-const limit = 50
+const apiLimit = 500
 const apiBaseURL = ( org == '' ? 'https://api.crowdin.com/api/v2' : `https://${org}.api.crowdin.com/api/v2` )
 
 var ss = SpreadsheetApp.getActiveSpreadsheet()
 var ui = SpreadsheetApp.getUi()
 
 //
-// Get API token from user
+// Adding functions to the menu
 //
-
-function getTokenPrompt() {
-  var result = ui.prompt("Please enter the Crowdin API token (don't share your token anywhere!)")
-  
-  //Get the button that the user pressed.
-  var button = result.getSelectedButton()
-  
-  if (button === ui.Button.OK) {
-    Logger.log("Got the token from the user.")
-    return result.getResponseText()
-  } else if (button === ui.Button.CLOSE) {
-    Logger.log("Script cancelled, user haven't supplied the API token")
-    return null
-  }
+ 
+function onOpen() {
+  ui.createMenu('Loc Tools')
+  .addItem('Overwrite current sheet with comments from Crowdin', 'overwriteWithIssuesFromCrowdin')
+//  .addSeparator()
+  .addToUi()
 }
 
 //
@@ -55,59 +47,45 @@ function getProjectLinkID() {
       return null
     }
   }
-  var url = `${apiBaseURL}/projects/${projectID}`
-  var options = {
-    'muteHttpExceptions': true,
-    'headers': {
-      'Authorization': `Bearer ${token}`
-    }
+
+  data = crowdinAPIGetResponseData()
+
+  if (!data || ! ('identifier' in data)) {
+    Logger.log(`Error: Couldn't get project identifier... Data: ${data}`)
+    return null
   }
-  var response = UrlFetchApp.fetch(url, options)
 
-  // Make request to API and get response before this point.
-  var json = response.getContentText();
-  var data = JSON.parse(json);
-  return data.data.identifier
-}
-
-//
-// Adding functions to the menu
-//
- 
-function onOpen() {
-  ui.createMenu('SoC Tools')
-  .addItem('Pull comments and issues from Crowdin', 'overwriteWithIssuesFromCrowdin')
-//  .addSeparator()
-  .addToUi()
+  Logger.log(`Fetched project identifier: ${data.identifier}`)
+  return data.identifier
+  
 }
 
 //
 // Downloading file list from Crowdin (to have names)
 //
 
-function downloadFileNamesFromCrowdin() {
-  var url = `${apiBaseURL}/projects/${projectID}/files?limit=500`
-  var options = {
-    'muteHttpExceptions': true,
-    'headers': {
-      'Authorization': `Bearer ${token}`
-    }
-  }
-  var response = UrlFetchApp.fetch(url, options)
+function getFileNamesFromCrowdin() {
+  var data = crowdinAPIFetchAllData('/files')
 
-  // Make request to API and get response before this point.
-  var json = response.getContentText();
-  var data = JSON.parse(json);
+  if(data == null) {
+    Logger.log('Error: Something went wrong while trying to get file names from Crowdin...')
+  }
+
+  if(data.length == 0) {
+    Logger.log(`Error: Got an empty list of files from Crowdin: ${data}`)
+  }
 
   var files = new Map()
   
-  data.data.forEach(function(item){
+  data.forEach(function(item){
     if (item.data.title) {
       files.set(item.data.id, item.data.title)
     } else {
       files.set(item.data.id, item.data.name)
     }
   })
+
+  Logger.log(`Fetched file names from Crowdin: ${data.length} file(s)`)
 
   return files
 }
@@ -116,34 +94,10 @@ function downloadFileNamesFromCrowdin() {
 // Downloading issues and comments from Crowdin
 //
 
-function downloadIssuesFromCrowdin() {
+function getIssuesFromCrowdin() {
   var projectLinkID = getProjectLinkID()
-  var offset = 0
-  var url = `${apiBaseURL}/projects/${projectID}/comments?limit=${limit}&offset=`
-  var options = {
-    'muteHttpExceptions': true,
-    'headers': {
-      'Authorization': `Bearer ${token}`
-    }
-  }
-
-  data = new Array()
-  
-  while (true){
-    response = UrlFetchApp.fetch(url + offset, options)
-    json = response.getContentText();
-    responseData = JSON.parse(json);
-    if (responseData.data.length == 0) { break }
-
-    data.push(...responseData.data)
-
-    if (responseData.data.length < limit) { break }
-
-    offset += limit
-  }
-
-  var files = downloadFileNamesFromCrowdin()
-
+  var files = getFileNamesFromCrowdin()
+  var data = crowdinAPIFetchAllData('/comments')
   var issues = new Array()
 
   for (issueData of data) {
@@ -197,13 +151,11 @@ function downloadIssuesFromCrowdin() {
   var issuesMap = new Map()
   for (issue of issues) {
     if (!issuesMap.has(issue.stringID)) {
-            issuesMap.set(issue.stringID, [issue])
-        } else {
-            issue.fileIDandName = ''
-            issue.stringText = ''
-            issue.context = ''
-            issuesMap.get(issue.stringID).push(issue)
-        }
+      issue.firstForString = true
+      issuesMap.set(issue.stringID, [issue])
+    } else {
+      issuesMap.get(issue.stringID).push(issue)
+    }
   }
 
   issues = new Array()
@@ -218,7 +170,7 @@ function downloadIssuesFromCrowdin() {
 }
 
 function overwriteWithIssuesFromCrowdin() {
-  var issues = downloadIssuesFromCrowdin()
+  var issues = getIssuesFromCrowdin()
 
   var sheet = SpreadsheetApp.getActiveSheet()
   var dataRange = sheet.getDataRange()
@@ -266,30 +218,117 @@ function overwriteWithIssuesFromCrowdin() {
   sheet.getRange(2, 3, issueArray.length).setRichTextValues(stringIDsAndLinks)
 
   for (let [index, val] of issues.entries()) {
-    if (val.stringText != '') {
+    if (val.firstForString) {
       sheet.getRange(index + 2, 1, index + 2, lastColumn)
       .setBorder(true, null, null, null, null, null, '#000000', SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
-     /* .setBackground('#eeeeee') */
     }
   }
 
+  // TODO: Extract font to config/params?
   sheet.getRange(1, 1, sheet.getMaxRows(), sheet.getMaxColumns()).setFontFamily('Calibri').setFontSize(11)
 
   wrapStrategies.map((strat, col) => {sheet.getRange(2, col + 1, sheet.getDataRange().getLastRow(), 1).setWrapStrategy(strat)})
 
   colFontColors.map((color, col) => {sheet.getRange(2, col + 1, sheet.getDataRange().getLastRow(), 1).setFontColor(color)})
-  
-  sheet.setConditionalFormatRules(
-    [SpreadsheetApp.newConditionalFormatRule()
+
+  // Apply conditional formatting rules
+  // TODO: Extract the rules to the top/config part of the script
+  sheet.setConditionalFormatRules([
+    // Hightlight Source mistakes
+    SpreadsheetApp.newConditionalFormatRule()
     .whenFormulaSatisfied('=AND($F2="Open",$G2="Source Mistake")')
     .setBackground('#fff2cc')
-    .setRanges([sheet.getRange(2, 1, sheet.getLastRow(), 10)]).build()]
+    .setRanges([sheet.getRange(2, 1, sheet.getLastRow(), 10)]).build(),
+    // Hide (white font color) duplicate text in File, String, Context
+    SpreadsheetApp.newConditionalFormatRule()
+    .whenFormulaSatisfied('=$C2=$C1')
+    .setFontColor('#ffffff')
+    .setRanges([
+      sheet.getRange(2, 2, sheet.getLastRow(), 1),
+      sheet.getRange(2, 8, sheet.getLastRow(), 1),
+      sheet.getRange(2, 10, sheet.getLastRow(), 1)
+      ]).build()
+    ]
   )
+
+  // Recreate filter to cover the whole range
+  sheet.getFilter().remove()
+  sheet.getDataRange().createFilter()
 }
 
 //
+// ==============================================================================================================================================
+//
 // Service Functions
 //
+
+//
+// Get API token from user
+//
+
+function getTokenPrompt() {
+  var result = ui.prompt("Please enter the Crowdin API token (don't share your token anywhere!)")
+  
+  //Get the button that the user pressed.
+  var button = result.getSelectedButton()
+  
+  if (button === ui.Button.OK) {
+    Logger.log("Got the token from the user.")
+    return result.getResponseText()
+  } else if (button === ui.Button.CLOSE) {
+    Logger.log("Script cancelled, user haven't supplied the API token")
+    return null
+  }
+}
+
+//
+// Make an API request and return 'data' if it exists
+// Return null if data isn't present
+//
+
+function crowdinAPIGetResponseData(addAPIPath) {
+  var url = ( addAPIPath != null ? `${apiBaseURL}/projects/${projectID}${addAPIPath}` : `${apiBaseURL}/projects/${projectID}` )
+  var options = {
+    'muteHttpExceptions': true,
+    'headers': {
+      'Authorization': `Bearer ${token}`
+    }
+  }
+
+  var response = UrlFetchApp.fetch(url, options)
+  var json = response.getContentText();
+  var data = JSON.parse(json);
+
+  if ('data' in data) {
+    return data.data
+  }
+
+  Logger.log(`No data in response for ${url}`)
+  Logger.log(`Response: ${response}`)
+  return null
+}
+
+//
+// Make an API request and fetch all 'data' into an array
+//
+
+function crowdinAPIFetchAllData(addAPIPath) {
+  var offset = 0
+  var addURL = `${addAPIPath}?limit=${apiLimit}&offset=`
+  
+  data = new Array()
+  
+  while (true){
+    newData = crowdinAPIGetResponseData(addURL+offset)
+    if (newData.length == 0) { break }
+    data.push(...newData)
+    if (newData.length < apiLimit) { break }
+    offset += apiLimit
+  }
+
+  return data
+
+}
 
 function prettylog(object){
   Logger.log(JSON.stringify(object,null,2))
@@ -304,13 +343,4 @@ function createRichTextLink(string, link){
   if (link) {
     return SpreadsheetApp.newRichTextValue().setText(string).setLinkUrl(0,String(string).length, link).build()
   }
-
-/*  var styleGrey = SpreadsheetApp.newTextStyle().setForegroundColor('#aaa').build()
-  var fileIDandName = SpreadsheetApp.newRichTextValue()
-                      .setText(i.fileIDandName)
-                      .setTextStyle(0, String(i.fileID).length, styleGrey)
-                      .build()
-*/
-
-//  return SpreadsheetApp.newRichTextValue().setText(item).build()
 }
