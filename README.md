@@ -40,7 +40,7 @@ On the other hand, hardcoding your token in the script exposes it to anyone usin
 
 The organization name and project ID will be saved in script parameters for all users of the spreadsheet. The token will be saved in user parameters for each user separately for security reasons. Each user will have to provide their own token.
 
-### hardcoding parameters in the script
+### Hardcoding parameters in the script
 - Go to `Extensions` → `Apps Script` → `Code.gs`
 - Hardcode your organization name or set it to `""` if you're using crowdin.com
 - Hardcode the project ID
