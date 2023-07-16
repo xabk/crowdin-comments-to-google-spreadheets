@@ -17,6 +17,12 @@ var token = null;
 // WARNING: API token saved here will be freely available to anyone who has access to the spreadsheet
 // --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
+// ===========================================================
+// Script Parameters
+// ===========================================================
+
+const fontName = "Calibri";
+
 const wrClip = SpreadsheetApp.WrapStrategy.CLIP;
 const wrWrap = SpreadsheetApp.WrapStrategy.WRAP;
 
@@ -60,6 +66,25 @@ const wrapStrategies = [
   wrClip,
 ];
 
+// ===========================================================
+// Do not edit below this line
+// ===========================================================
+
+var scriptProperties = PropertiesService.getScriptProperties();
+var userProperties = PropertiesService.getUserProperties();
+
+if (token == null) {
+  token = userProperties.getProperty("crowdinAPIKey");
+}
+
+if (projectID == null) {
+  projectID = scriptProperties.getProperty("crowdinProjectID");
+}
+
+if (org == null) {
+  org = scriptProperties.getProperty("crowdinOrg");
+}
+
 const apiLimit = 500;
 const apiBaseURL =
   org == ""
@@ -68,8 +93,6 @@ const apiBaseURL =
 
 var ss = SpreadsheetApp.getActiveSpreadsheet();
 var ui = SpreadsheetApp.getUi();
-var scriptProperties = PropertiesService.getScriptProperties();
-var userProperties = PropertiesService.getUserProperties();
 
 //
 // Adding functions to the menu
@@ -90,21 +113,6 @@ function onOpen() {
     .addItem("View or set Crowdin project ID (all users)", "setProjectID")
     .addItem("View or set Crowdin org (all users)", "setOrg")
     .addToUi();
-
-  if (token == null && userProperties.getProperty("crowdinAPIKey") != null) {
-    token = userProperties.getProperty("crowdinAPIKey");
-  }
-
-  if (
-    projectID == null &&
-    scriptProperties.getProperty("crowdinProjectID") != null
-  ) {
-    projectID = scriptProperties.getProperty("crowdinProjectID");
-  }
-
-  if (org == null && scriptProperties.getProperty("crowdinOrg") != null) {
-    org = scriptProperties.getProperty("crowdinOrg");
-  }
 }
 
 //
@@ -250,40 +258,8 @@ function getIssuesFromCrowdin() {
 }
 
 function overwriteWithIssuesFromCrowdin() {
-  if (org == null) {
-    setOrg();
-    org = scriptProperties.getProperty("crowdinOrg");
-    if (org == null) {
-      Logger.log("Error: Couldn't get the organization name from the user");
-      ui.alert(
-        "Error: We need a valid or empty organization name to fetch data from Crowdin. Please try again."
-      );
-      return;
-    }
-  }
-
-  if (projectID == null) {
-    setProjectID();
-    projectID = scriptProperties.getProperty("crowdinProjectID");
-    if (projectID == null) {
-      Logger.log("Error: Couldn't get the project ID from the user");
-      ui.alert(
-        "Error: We need a valid project ID to fetch data from Crowdin. Please try again."
-      );
-      return;
-    }
-  }
-
-  if (token == null) {
-    setAPIKey();
-    token = userProperties.getProperty("crowdinAPIKey");
-    if (token == null) {
-      Logger.log("Error: Couldn't get the API token from the user");
-      ui.alert(
-        "Error: We need a valid token to fetch data from Crowdin. Please try again."
-      );
-      return;
-    }
+  if (!checkAPICredentials()) {
+    return false;
   }
 
   var issues = getIssuesFromCrowdin();
@@ -377,7 +353,7 @@ function overwriteWithIssuesFromCrowdin() {
   // TODO: Extract font to config/params?
   sheet
     .getRange(1, 1, sheet.getMaxRows(), sheet.getMaxColumns())
-    .setFontFamily("Calibri")
+    .setFontFamily(fontName)
     .setFontSize(11);
 
   wrapStrategies.map((strat, col) => {
@@ -425,24 +401,47 @@ function overwriteWithIssuesFromCrowdin() {
 //
 
 //
-// Get API token from user
+// Get API details from user, save as user or document properties
 //
 
-function getTokenPrompt() {
-  var result = ui.prompt(
-    "Please enter the Crowdin API token (don't share your token anywhere!)"
-  );
-
-  //Get the button that the user pressed.
-  var button = result.getSelectedButton();
-
-  if (button === ui.Button.OK) {
-    Logger.log("Got the token from the user.");
-    return result.getResponseText();
-  } else if (button === ui.Button.CLOSE) {
-    Logger.log("Script cancelled, user haven't supplied the API token");
-    return null;
+function checkAPICredentials() {
+  if (org == null) {
+    setOrg();
+    org = scriptProperties.getProperty("crowdinOrg");
+    if (org == null) {
+      Logger.log("Error: Couldn't get the organization name from the user");
+      ui.alert(
+        "Error: We need a valid or empty organization name to fetch data from Crowdin. Please try again."
+      );
+      return false;
+    }
   }
+
+  if (projectID == null) {
+    setProjectID();
+    projectID = scriptProperties.getProperty("crowdinProjectID");
+    if (projectID == null) {
+      Logger.log("Error: Couldn't get the project ID from the user");
+      ui.alert(
+        "Error: We need a valid project ID to fetch data from Crowdin. Please try again."
+      );
+      return false;
+    }
+  }
+
+  if (token == null) {
+    setAPIKey();
+    token = userProperties.getProperty("crowdinAPIKey");
+    if (token == null) {
+      Logger.log("Error: Couldn't get the API token from the user");
+      ui.alert(
+        "Error: We need a valid token to fetch data from Crowdin. Please try again."
+      );
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function setAPIKey() {
@@ -470,10 +469,11 @@ function deleteAPIKey() {
 }
 
 function setProjectID() {
-  var result = ui.prompt(
-    "Please enter the Crowdin Project ID",
-    ui.ButtonSet.OK_CANCEL
-  );
+  var text = "Please enter the Crowdin Project ID";
+  if (projectID != null) {
+    text += `.\nCurrent project ID: ${projectID}. Click Cancel to keep it`;
+  }
+  var result = ui.prompt(text, ui.ButtonSet.OK_CANCEL);
   var button = result.getSelectedButton();
   if (button === ui.Button.OK) {
     scriptProperties.setProperty("crowdinProjectID", result.getResponseText());
@@ -482,10 +482,14 @@ function setProjectID() {
 }
 
 function setOrg() {
-  var result = ui.prompt(
-    "Please enter the Crowdin organization name (leave blank if you're using Crowdin.com)",
-    ui.ButtonSet.OK_CANCEL
-  );
+  var text =
+    "Please enter the Crowdin organization name (leave blank if you're using Crowdin.com)";
+  if (org != null) {
+    text += `.\nCurrent organization name: ${
+      org ? org : "<Crowdin.com>"
+    }. Click Cancel to keep it`;
+  }
+  var result = ui.prompt(text, ui.ButtonSet.OK_CANCEL);
   var button = result.getSelectedButton();
   if (button === ui.Button.OK) {
     scriptProperties.setProperty("crowdinOrg", result.getResponseText());
