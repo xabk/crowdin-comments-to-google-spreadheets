@@ -13,24 +13,34 @@ Plans:
 - [ ] Two-way sync between spreadsheet and Crowdin to close issues and add your answers/comments
 
 ## Installation
+### By copying a template (e.g., into a new spreadsheet)
 - Copy this spreadsheet: https://docs.google.com/spreadsheets/d/1X9ob_hB1r87uv2ZTu5xTJ3rfOfULA3oGfEaIPLpwCpI/edit#gid=0
+- Set parameters, see below
 
-# Parameters
-## Security considerations
+### Manually (e.g., into an existing spreadsheet)
+- Open Google Apps Script editor via the menu in your spreadsheet: `Extensions` → `Apps Script`
+- Open `Project Settings` (cog icon on the left toolbar) and tick the `Show "appscript.json" manifest file in editor` checkbox
+- Go back to the Editor (angled brackets icon on the left toolbar)
+- Copy the contents of the `appsscript.json` file here to the `appsscript.json` file in the editor
+- Copy the contents of the `Code.gs` file here to the `Code.gs` file in the editor
+- Set parameters, see below
+
+## Parameters
+### Security considerations
 There is no clear answer as to what is a more secure way in a real-world environment with real people.
 
 On one hand, if each user creates their own token and it's saved per user, these tokens won't leak via this script/spreadsheet. But people tend to be lazy with tokens and scopes, especially if it requires creating a separate account, and less tech-savvy users tend to save those tokens where they can be accessed by other people.
 
 On the other hand, hardcoding your token in the script exposes it to anyone using the spreadsheet. But if this token is limited to the current project and has a limited scope, it's not that much of a deal, as long as your spreadsheet is shared with trusted people.
 
-## Saving parameters in properties
+### Saving parameters in properties
 - Set organization via `Loc Tools` → `View or set Crowdin org (all users)`
 - Set project ID via `Loc Tools` → `View or set Crowdin project ID (all users)`
 - Set token via `Loc Tools` → `Set Crowdin API key (current Google user)`
 
 The organization name and project ID will be saved in script parameters for all users of the spreadsheet. The token will be saved in user parameters for each user separately for security reasons. Each user will have to provide their own token.
 
-## hardcoding parameters in the script
+### hardcoding parameters in the script
 - Go to `Extensions` → `Apps Script` → `Code.gs`
 - Hardcode your organization name or set it to `""` if you're using crowdin.com
 - Hardcode the project ID
