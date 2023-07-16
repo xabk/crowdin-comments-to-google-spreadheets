@@ -6,9 +6,9 @@ This script exports a *static* copy of all the comments and issues from a projec
 It groups all the comments and issues per string and hides repeating things like file name, source, and context to make the spreadsheet more readable. It does this by setting the text color white, so the text is still there and you can filter properly. It also highlights open source mistake issues using conditional formatting.
 
 Plans:
-- [x] Less readable but filter-friendly version
+- [x] ~~Less readable but filter-friendly version~~ Filter-friendly version
 - [x] Separate list(s) of "Translation mistake" issues, split per language or filter-friendly
-- [x] Separate sheets for source mistakes, and wrong translation issues (done via queries)
+- [x] Separate sheets for source mistakes
 - [ ] More smart filters via scripts (support comment threads, filter by date, issue type, language, etc.)
 - [ ] Two-way sync between spreadsheet and Crowdin to close issues and add your answers/comments
 
