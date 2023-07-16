@@ -58,13 +58,13 @@ The organization name and project ID will be saved in script parameters for all 
 
 ### API token
 It's best to create a separate account with limited rights and then create a token with limited scope for this.
-- It's best to create or use any account with `Translator` access to create an API token
+- Create or use any account with `Translator` access to create an API token
 - Crowdin.com: Create a separate translator account with access to only one project
 - Enterprise: Limit scope to `Projects` → `Project` and `Source Files`
 - Enterprise: It's also a good idea to enable `Granular Access` and limit the token to a specific project
 
 ## Usage
 - After you install the script and refresh the spreadsheet, you'll see `Loc Tools` in the Spreadsheets main menu
-- Use the `Pull comments and issues from Crowdin` menu item to download all comments and issues from the project and *overwrite the contents of the active sheet*
+- Use the `Overwrite current sheet with comments from Crowdin` menu item to download all comments and issues from the project and *overwrite the contents of the active sheet*
 - The script will ask you for permission to access the spreadsheet it's installed in and to communicate with external services when you run it for the first time
-- If you haven't saved the API token within the script, it will ask you for it when you launch it
+- If you haven't set up the parameters one way or another, it will ask you to do it when you first launch it
