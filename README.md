@@ -9,6 +9,8 @@ Plans:
 - [x] ~~Less readable but filter-friendly version~~ Filter-friendly version
 - [x] Separate list(s) of "Translation mistake" issues, split per language or filter-friendly
 - [x] Separate sheets for source mistakes
+- [ ] Create/reuse sheets by name (all comments, internal, translation mistakes, source mistakes, etc.)
+- [ ] Update existing static copy instead of overwriting it (using issue IDs)
 - [ ] More smart filters via scripts (support comment threads, filter by date, issue type, language, etc.)
 - [ ] Two-way sync between spreadsheet and Crowdin to close issues and add your answers/comments
 
