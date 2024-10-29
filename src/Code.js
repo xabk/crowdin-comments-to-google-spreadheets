@@ -262,10 +262,6 @@ function overwriteWithIssuesFromCrowdin() {
     return false;
   }
 
-  org = scriptProperties.getProperty("crowdinOrg");
-  projectID = scriptProperties.getProperty("crowdinProjectID");
-  token = userProperties.getProperty("crowdinAPIKey");
-
   var issues = getIssuesFromCrowdin();
 
   var sheet = SpreadsheetApp.getActiveSheet();
@@ -411,6 +407,7 @@ function overwriteWithIssuesFromCrowdin() {
 function checkAPICredentials() {
   if (org == null) {
     setOrg();
+    org = scriptProperties.getProperty("crowdinOrg");
     if (org == null) {
       Logger.log("Error: Couldn't get the organization name from the user");
       ui.alert(
@@ -422,6 +419,7 @@ function checkAPICredentials() {
 
   if (projectID == null) {
     setProjectID();
+    projectID = scriptProperties.getProperty("crowdinProjectID");
     if (projectID == null) {
       Logger.log("Error: Couldn't get the project ID from the user");
       ui.alert(
@@ -433,6 +431,7 @@ function checkAPICredentials() {
 
   if (token == null) {
     setAPIKey();
+    token = userProperties.getProperty("crowdinAPIKey");
     if (token == null) {
       Logger.log("Error: Couldn't get the API token from the user");
       ui.alert(
