@@ -116,6 +116,39 @@ function onOpen() {
 }
 
 //
+// Adding Logs Sheet
+//
+
+function getOrCreateLogsSheet() {
+  let logsSheet = ss.getSheetByName("Logs");
+  if (!logsSheet) {
+    logsSheet = ss.insertSheet("Logs");
+    logsSheet.appendRow(["Timestamp", "Message"]);
+    logsSheet.setColumnWidth(1, 200);
+    logsSheet.setColumnWidth(2, 600);
+  }
+  return logsSheet;
+}
+
+function logMessage(message) {
+  const logsSheet = getOrCreateLogsSheet();
+  logsSheet.insertRowBefore(2);
+  logsSheet.getRange(2, 1, 1, 2).setValues([[new Date(), message]]);
+}
+
+//
+// Adding All Issues Sheet
+//
+
+function getOrCreateAllIssuesSheet() {
+  let allIssuesSheet = ss.getSheetByName("All Issues");
+  if (!allIssuesSheet) {
+    allIssuesSheet = ss.insertSheet("All Issues");
+  }
+  return allIssuesSheet;
+}
+
+//
 // Get Project Link ID
 // (project name on Crowdin.com or alphanumeric project ID used for URLs in Crowdin Enterprise)
 //
@@ -125,10 +158,12 @@ function getProjectLinkID() {
 
   if (!data || !("identifier" in data)) {
     Logger.log(`Error: Couldn't get project identifier... Data: ${data}`);
+    logMessage(`Error: Couldn't get project identifier.`);
     return null;
   }
 
   Logger.log(`Fetched project identifier: ${data.identifier}`);
+  logMessage(`Fetched project identifier: ${data.identifier}`);
   return data.identifier;
 }
 
@@ -141,12 +176,16 @@ function getFileNamesFromCrowdin() {
 
   if (data == null) {
     Logger.log(
-      "Error: Something went wrong while trying to get file names from Crowdin..."
+      "Error: Something went wrong while trying to get file names from Crowdin."
+    );
+    logMessage(
+      "Error: Something went wrong while trying to get file names from Crowdin."
     );
   }
 
   if (data.length == 0) {
     Logger.log(`Error: Got an empty list of files from Crowdin: ${data}`);
+    logMessage("Error: Got an empty list of files from Crowdin.");
   }
 
   var files = new Map();
@@ -160,6 +199,7 @@ function getFileNamesFromCrowdin() {
   });
 
   Logger.log(`Fetched file names from Crowdin: ${data.length} file(s)`);
+  logMessage(`Fetched file names from Crowdin: ${data.length} file(s)`);
 
   return files;
 }
@@ -174,6 +214,11 @@ function getIssuesFromCrowdin() {
   var data = crowdinAPIFetchAllData("/comments");
   var issues = new Array();
 
+  if (!data || data.length === 0) {
+    logMessage("Error: No issues or comments fetched from Crowdin.");
+    return issues;
+  }
+
   for (issueData of data) {
     issueData = issueData.data;
     let issue = new Object();
@@ -185,9 +230,13 @@ function getIssuesFromCrowdin() {
     issue.text = decodeHTMLEntities(issueData.text);
     issue.context = decodeHTMLEntities(issueData.string.context);
 
-    issue.language =
-      issueData.languageId.charAt(0).toUpperCase() +
-      issueData.languageId.slice(1);
+    if (issueData.languageId != null) {
+      issue.language =
+        issueData.languageId.charAt(0).toUpperCase() +
+        issueData.languageId.slice(1);
+    } else {
+      issue.language = "—";
+    }
 
     if (issueData.type == "comment") {
       issue.status = "Comment";
@@ -254,6 +303,7 @@ function getIssuesFromCrowdin() {
     }
   }
 
+  logMessage(`Fetched ${issues.length} issues from Crowdin.`);
   return issues;
 }
 
@@ -262,9 +312,15 @@ function overwriteWithIssuesFromCrowdin() {
     return false;
   }
 
+  logMessage("Starting to overwrite sheet with issues from Crowdin...");
   var issues = getIssuesFromCrowdin();
 
-  var sheet = SpreadsheetApp.getActiveSheet();
+  if (issues.length === 0) {
+    logMessage("No issues found to write to the sheet.");
+    return;
+  }
+
+  var sheet = getOrCreateAllIssuesSheet();
   var dataRange = sheet.getDataRange();
   var lastColumn = header[0].length;
   var maxColumns = sheet.getMaxColumns();
@@ -350,7 +406,6 @@ function overwriteWithIssuesFromCrowdin() {
     }
   }
 
-  // TODO: Extract font to config/params?
   sheet
     .getRange(1, 1, sheet.getMaxRows(), sheet.getMaxColumns())
     .setFontFamily(fontName)
@@ -390,8 +445,12 @@ function overwriteWithIssuesFromCrowdin() {
   ]);
 
   // Recreate filter to cover the whole range
-  sheet.getFilter().remove();
+  if (sheet.getFilter()) {
+    sheet.getFilter().remove();
+  }
   sheet.getDataRange().createFilter();
+
+  logMessage("Successfully overwrote the sheet with issues from Crowdin.");
 }
 
 //
@@ -410,6 +469,7 @@ function checkAPICredentials() {
     org = scriptProperties.getProperty("crowdinOrg");
     if (org == null) {
       Logger.log("Error: Couldn't get the organization name from the user");
+      logMessage("Error: Couldn't get the organization name from the user");
       ui.alert(
         "Error: We need a valid or empty organization name to fetch data from Crowdin. Please try again."
       );
@@ -422,6 +482,7 @@ function checkAPICredentials() {
     projectID = scriptProperties.getProperty("crowdinProjectID");
     if (projectID == null) {
       Logger.log("Error: Couldn't get the project ID from the user");
+      logMessage("Error: Couldn't get the project ID from the user");
       ui.alert(
         "Error: We need a valid project ID to fetch data from Crowdin. Please try again."
       );
@@ -434,6 +495,7 @@ function checkAPICredentials() {
     token = userProperties.getProperty("crowdinAPIKey");
     if (token == null) {
       Logger.log("Error: Couldn't get the API token from the user");
+      logMessage("Error: Couldn't get the API token from the user");
       ui.alert(
         "Error: We need a valid token to fetch data from Crowdin. Please try again."
       );
@@ -441,6 +503,7 @@ function checkAPICredentials() {
     }
   }
 
+  logMessage("API credentials successfully validated.");
   return true;
 }
 
@@ -453,6 +516,7 @@ function setAPIKey() {
   if (button === ui.Button.OK) {
     userProperties.setProperty("crowdinAPIKey", result.getResponseText());
     Logger.log("API key saved");
+    logMessage("API key saved");
   }
 }
 
@@ -465,6 +529,7 @@ function deleteAPIKey() {
   if (button === ui.Button.YES) {
     userProperties.deleteProperty("crowdinAPIKey");
     Logger.log("API key deleted");
+    logMessage("API key deleted");
   }
 }
 
@@ -478,6 +543,7 @@ function setProjectID() {
   if (button === ui.Button.OK) {
     scriptProperties.setProperty("crowdinProjectID", result.getResponseText());
     Logger.log("Project ID saved");
+    logMessage("Project ID saved");
   }
 }
 
@@ -494,6 +560,7 @@ function setOrg() {
   if (button === ui.Button.OK) {
     scriptProperties.setProperty("crowdinOrg", result.getResponseText());
     Logger.log("Organization name saved");
+    logMessage("Organization name saved");
   }
 }
 
@@ -524,6 +591,7 @@ function crowdinAPIGetResponseData(addAPIPath) {
 
   Logger.log(`No data in response for ${url}`);
   Logger.log(`Response: ${response}`);
+  logMessage(`No data in response for ${url}`);
   return null;
 }
 
@@ -549,6 +617,7 @@ function crowdinAPIFetchAllData(addAPIPath) {
     offset += apiLimit;
   }
 
+  logMessage(`Fetched ${data.length} entries from Crowdin for ${addAPIPath}`);
   return data;
 }
 
