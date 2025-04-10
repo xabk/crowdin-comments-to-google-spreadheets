@@ -2,3 +2,4 @@ secret
 .clasp.json
 .import_gtypes.js
 .claspignore
+*.code-workspace
