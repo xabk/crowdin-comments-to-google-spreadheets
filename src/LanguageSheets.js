@@ -17,7 +17,10 @@ function createLanguageSheets(issues) {
     const issueArray = languageIssues.map((issue) => [
       issue.id,
       issue.fileIDandName,
-      `=HYPERLINK("${issue.link}", "${issue.stringID}")`, // Use HYPERLINK formula
+      `=HYPERLINK("${issue.link.replace(
+        "/en-XX",
+        `/en-${issue.language.toLowerCase()}`
+      )}", "${issue.stringID}")`, // Adjust link for language
       issue.date,
       issue.user,
       issue.status,
@@ -77,7 +80,7 @@ function createLanguageSheets(issues) {
       // Highlight open issues
       SpreadsheetApp.newConditionalFormatRule()
         .whenFormulaSatisfied('=$F2="Open"')
-        .setBackground("#fff8b5") // Warmer and more pronounced yellow
+        .setBackground("#fbfbd8")
         .setRanges([sheet.getRange(2, 1, sheet.getLastRow(), totalColumns)])
         .build(),
     ]);

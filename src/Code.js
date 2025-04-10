@@ -74,6 +74,10 @@ if (token == null) {
   token = userProperties.getProperty("crowdinAPIKey");
 }
 
+if (token == null) {
+  token = scriptProperties.getProperty("crowdinDocAPIKey"); // Check document-level token
+}
+
 if (projectID == null) {
   projectID = scriptProperties.getProperty("crowdinProjectID");
 }
@@ -94,15 +98,12 @@ var ui = SpreadsheetApp.getUi();
 function onOpen() {
   ui.createMenu("Loc Tools")
     .addItem(
-      "Overwrite current sheet with comments from Crowdin",
+      "Pull comments and issues from Crowdin",
       "overwriteWithIssuesFromCrowdin"
     )
     .addSeparator()
     .addItem("Set Crowdin API key (current Google user)", "setAPIKey")
-    .addItem(
-      "Delete saved Crowdin API key (current Google user)",
-      "deleteAPIKey"
-    )
+    .addItem("Set Crowdin API key (document-wide)", "setDocAPIKey")
     .addItem("View or set Crowdin project ID (all users)", "setProjectID")
     .addItem("View or set Crowdin org (all users)", "setOrg")
     .addToUi();
@@ -166,6 +167,19 @@ function setAPIKey() {
     userProperties.setProperty("crowdinAPIKey", result.getResponseText());
     Logger.log("API key saved");
     logMessage("API key saved");
+  }
+}
+
+function setDocAPIKey() {
+  var result = ui.prompt(
+    "Please enter the Crowdin API token for this document (don't share your token anywhere!)",
+    ui.ButtonSet.OK_CANCEL
+  );
+  var button = result.getSelectedButton();
+  if (button === ui.Button.OK) {
+    scriptProperties.setProperty("crowdinDocAPIKey", result.getResponseText());
+    Logger.log("Document-wide API key saved");
+    logMessage("Document-wide API key saved");
   }
 }
 

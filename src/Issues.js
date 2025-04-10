@@ -7,6 +7,12 @@ function getOrCreateAllIssuesSheet() {
 }
 
 function getIssuesFromCrowdin() {
+  if (!token) {
+    logMessage("Error: No API token available.");
+    ui.alert("Error: No API token available. Please set one via the menu.");
+    return [];
+  }
+
   var projectLinkID = getProjectLinkID();
   var files = getFileNamesFromCrowdin();
   var data = crowdinAPIFetchAllData("/comments");
