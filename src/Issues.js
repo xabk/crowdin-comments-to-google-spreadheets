@@ -224,7 +224,7 @@ function overwriteWithIssuesFromCrowdin() {
   // Apply conditional formatting rules
   // TODO: Extract the rules to the top/config part of the script
   sheet.setConditionalFormatRules([
-    // Hightlight Source mistakes
+    // Highlight Source mistakes
     SpreadsheetApp.newConditionalFormatRule()
       .whenFormulaSatisfied('=AND($F2="Open",$G2="Source Mistake")')
       .setBackground("#fff2cc")
@@ -249,4 +249,7 @@ function overwriteWithIssuesFromCrowdin() {
   sheet.getDataRange().createFilter();
 
   logMessage("Successfully overwrote the sheet with issues from Crowdin.");
+
+  // Create language-specific sheets
+  createLanguageSheets(issues);
 }
