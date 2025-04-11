@@ -23,11 +23,13 @@ const ISSUES_SHEET_NAME_CONTEXT = "General and Context Requests";
 
 const OPEN_ISSUE_COLOR = "#fff2cc"; // Color for open issues
 
+// Use this to add a link to another Crowdin project via search for string key (taken as 1st line of context)
+// E.g., to link public and private projects
 const ADD_LINK = true; // Add another hyperlink
 const ADD_LINK_TEXT = "PRO"; // Text for the hyperlink
 const ADD_LINK_URL =
-  "https://csp.crowdin.com/editor/62/all/enus-%lang%/304?view=comfortable&filter=basic&value=0&search_scope=key&search_strict=1&search_full_match=0&case_sensitive=1#q=%term%";
-// URL for the hyperlink, %lang% will be replaced with the language code, %term% will be replaced with the search term
+  "https://csp.crowdin.com/editor/<SOME_OTHER_PROJECT_FILE_ID>/all/enus-%lang%/304?view=comfortable&filter=basic&value=0&search_scope=key&search_strict=1&search_full_match=0&case_sensitive=1#q=%term%";
+// URL for the hyperlink, %lang% will be replaced with the language code, %term% will be replaced with the string key
 
 const fontName = "Calibri";
 
