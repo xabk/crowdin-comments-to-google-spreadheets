@@ -51,18 +51,16 @@ function crowdinAPIFetchAllData(addAPIPath) {
 // (project name on Crowdin.com or alphanumeric project ID used for URLs in Crowdin Enterprise)
 //
 
-function getProjectLinkID() {
+function getProjectSourceLang() {
   data = crowdinAPIGetResponseData();
 
-  if (!data || !("identifier" in data)) {
-    Logger.log(`Error: Couldn't get project identifier... Data: ${data}`);
-    logMessage(`Error: Couldn't get project identifier.`);
-    return null;
+  if (!data || !("sourceLanguageId" in data)) {
+    logMessage(`Error: Couldn't get project identifier. Defaulting to "en".`);
+    return "en";
   }
 
-  Logger.log(`Fetched project identifier: ${data.identifier}`);
-  logMessage(`Fetched project identifier: ${data.identifier}`);
-  return data.identifier;
+  logMessage(`Fetched project source language: ${data.sourceLanguageId}`);
+  return data.sourceLanguageId.replace("-", "").toLowerCase();
 }
 
 //
@@ -109,7 +107,7 @@ function getIssuesFromCrowdin() {
     return [];
   }
 
-  var projectLinkID = getProjectLinkID();
+  var projectSrcLang = getProjectSourceLang();
   var files = getFileNamesFromCrowdin();
   var data = crowdinAPIFetchAllData("/comments");
   var issues = new Array();
@@ -173,8 +171,8 @@ function getIssuesFromCrowdin() {
 
     issue.link =
       org == ""
-        ? `https://crowdin.com/translate/${projectLinkID}/all/en-XX#${issue.stringID}`
-        : `https://${org}.crowdin.com/translate/${projectLinkID}/all/en-XX#${issue.stringID}`;
+        ? `https://crowdin.com/editor/${projectID}/all/${projectSrcLang}-XX#${issue.stringID}`
+        : `https://${org}.crowdin.com/editor/${projectID}/all/${projectSrcLang}-XX#${issue.stringID}`;
 
     issues.push(issue);
   }

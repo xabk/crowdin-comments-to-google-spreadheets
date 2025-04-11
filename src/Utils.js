@@ -44,7 +44,7 @@ function prepareIssueLinks(
   addLinkText,
   addLinkEnabled
 ) {
-  const stringLink = issue.link.replace("/en-XX", `/en-${issue.language}`);
+  const stringLink = issue.link.replace("-XX#", `-${issue.language}#`);
   const addLink = addLinkUrlTemplate
     ? addLinkUrlTemplate
         .replace("%term%", issue.stringKey || "")
