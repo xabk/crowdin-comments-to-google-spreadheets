@@ -21,6 +21,14 @@ const ISSUES_SHEET_NAME_LANG = "Translation Issues (%lang%)"; // %lang% will be 
 const ISSUES_SHEET_NAME_SOURCE = "Source Issues";
 const ISSUES_SHEET_NAME_CONTEXT = "General and Context Requests";
 
+const OPEN_ISSUE_COLOR = "#fff2cc"; // Color for open issues
+
+const ADD_LINK = true; // Add another hyperlink
+const ADD_LINK_TEXT = "PRO"; // Text for the hyperlink
+const ADD_LINK_URL =
+  "https://csp.crowdin.com/editor/62/all/enus-%lang%/304?view=comfortable&filter=basic&value=0&search_scope=key&search_strict=1&search_full_match=0&case_sensitive=1#q=%term%";
+// URL for the hyperlink, %lang% will be replaced with the language code, %term% will be replaced with the search term
+
 const fontName = "Calibri";
 
 const wrClip = SpreadsheetApp.WrapStrategy.CLIP;
@@ -97,6 +105,10 @@ const apiBaseURL =
 
 var ss = SpreadsheetApp.getActiveSpreadsheet();
 var ui = SpreadsheetApp.getUi();
+
+function pullAndUpdateIssues() {
+  overwriteWithIssuesFromCrowdin();
+}
 
 function onOpen() {
   ui.createMenu("Loc Tools")

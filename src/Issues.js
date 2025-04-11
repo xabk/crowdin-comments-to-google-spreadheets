@@ -1,116 +1,3 @@
-function getOrCreateAllIssuesSheet() {
-  let allIssuesSheet = ss.getSheetByName(ISSUES_SHEET_NAME_ALL);
-  if (!allIssuesSheet) {
-    allIssuesSheet = ss.insertSheet(ISSUES_SHEET_NAME_ALL);
-  }
-  return allIssuesSheet;
-}
-
-function getIssuesFromCrowdin() {
-  if (!token) {
-    logMessage("Error: No API token available.");
-    ui.alert("Error: No API token available. Please set one via the menu.");
-    return [];
-  }
-
-  var projectLinkID = getProjectLinkID();
-  var files = getFileNamesFromCrowdin();
-  var data = crowdinAPIFetchAllData("/comments");
-  var issues = new Array();
-
-  if (!data || data.length === 0) {
-    logMessage("Error: No issues or comments fetched from Crowdin.");
-    return issues;
-  }
-
-  for (issueData of data) {
-    issueData = issueData.data;
-    let issue = new Object();
-
-    issue.id = issueData.id;
-    issue.date = new Date(issueData.createdAt);
-    // issue.dateString = new Intl.DateTimeFormat("en" , {dateStyle: "short"}).format(issue.date)
-
-    issue.text = decodeHTMLEntities(issueData.text);
-    issue.context = decodeHTMLEntities(issueData.string.context);
-
-    if (issueData.languageId != null) {
-      issue.language =
-        issueData.languageId.charAt(0).toUpperCase() +
-        issueData.languageId.slice(1);
-    } else {
-      issue.language = "—";
-    }
-
-    if (issueData.type == "comment") {
-      issue.status = "Comment";
-      issue.type = "Comment";
-    } else {
-      issue.status = issueData.issueStatus
-        .replace(/unresolved/, "Open")
-        .replace(/resolved/, "Closed");
-      issue.type = (
-        issueData.issueType.charAt(0).toUpperCase() +
-        issueData.issueType.slice(1)
-      ).replace("_", " ");
-    }
-
-    issue.stringID = issueData.stringId;
-    issue.stringText = decodeHTMLEntities(issueData.string.text);
-
-    issue.userID = issueData.userId;
-    issue.user = issueData.user.username;
-    if (
-      issueData.user.fullName &
-      (issueData.user.fullName != issueData.user.username)
-    ) {
-      issue.user += `\n${issueData.user.fullName}`;
-    }
-    issue.user += `\n\nLang: ${issue.language}`;
-
-    issue.fileID = issueData.string.fileId;
-    issue.fileIDandName = `${issueData.string.fileId}\n\n${files.get(
-      issueData.string.fileId
-    )}`;
-
-    issue.link =
-      org == ""
-        ? `https://crowdin.com/translate/${projectLinkID}/all/en-XX#${issue.stringID}`
-        : `https://${org}.crowdin.com/translate/${projectLinkID}/all/en-XX#${issue.stringID}`;
-
-    issues.push(issue);
-  }
-
-  issues.sort((firstEl, secondEl) => {
-    if (firstEl.date != secondEl.date) {
-      return firstEl.date - secondEl.date;
-    } else {
-      return firstEl.id - secondEl.id;
-    }
-  });
-
-  var issuesMap = new Map();
-  for (issue of issues) {
-    if (!issuesMap.has(issue.stringID)) {
-      issue.firstForString = true;
-      issuesMap.set(issue.stringID, [issue]);
-    } else {
-      issuesMap.get(issue.stringID).push(issue);
-    }
-  }
-
-  issues = new Array();
-
-  for ([key, value] of issuesMap) {
-    for (item of value) {
-      issues.push(item);
-    }
-  }
-
-  logMessage(`Fetched ${issues.length} issues from Crowdin.`);
-  return issues;
-}
-
 function overwriteWithIssuesFromCrowdin() {
   if (!checkAPICredentials()) {
     return false;
@@ -124,75 +11,28 @@ function overwriteWithIssuesFromCrowdin() {
     return;
   }
 
-  var sheet = getOrCreateAllIssuesSheet();
-  var dataRange = sheet.getDataRange();
-  var lastColumn = header[0].length;
-  var maxColumns = sheet.getMaxColumns();
+  // Create or update the main issues sheet
+  createAllISsuesSheet(issues);
 
-  if (maxColumns < header[0].length) {
-    sheet.insertColumnsAfter(maxColumns, header[0].length - maxColumns);
-  }
+  // Create source issues sheet
+  createSourceIssuesSheet(issues);
 
-  sheet
-    .getRange(1, 1, 1, lastColumn)
-    .setValues(header)
-    .setFontColor("#f3f3f3")
-    .setBackground("#434343")
-    .setFontWeight("bold");
-  colWidths.map((width, col) => {
-    sheet.setColumnWidth(col + 1, width);
-  });
-  sheet.setFrozenRows(1);
+  // Create context and general questions sheet
+  createContextAndGeneralQuestionsSheet(issues);
 
-  sheet
-    .getRange(2, 1, sheet.getMaxRows() - 1, sheet.getMaxColumns())
-    .clearContent();
-  sheet
-    .getRange(2, 1, sheet.getMaxRows() - 1, sheet.getMaxColumns())
-    .setBorder(false, false, false, false, false, false);
+  // Create language-specific sheets
+  createLanguageSheets(issues);
+}
 
-  issueArray = new Array();
-  stringIDsAndLinks = new Array();
+function createAllAIssuesSheet(issues) {
+  sheetName = ISSUES_SHEET_NAME_ALL;
 
-  for (i of issues) {
-    issueArray.push([
-      i.id,
-      i.fileIDandName,
-      i.stringID,
-      i.date,
-      i.user,
-      i.status,
-      i.type,
-      i.stringText,
-      i.text,
-      i.context,
-    ]);
-    stringIDsAndLinks.push([createRichTextLink(i.stringID, i.link)]);
+  createOrUpdateSheet(sheetName, issues);
 
-    /*  let styleGrey = SpreadsheetApp.newTextStyle().setForegroundColor('#aaa').build()
-    let fileIDandName = SpreadsheetApp.newRichTextValue()
-                    .setText(i.fileIDandName)
-                    .setTextStyle(0, String(i.fileID).length, styleGrey)
-                    .build()
-    var row = [i.id, fileIDandName, i.stringID, i.date, i.user, i.status, i.type, i.text, i.stringText, i.context]
-    row = row.map(function(item){
-      if (item.getRuns) {
-        return item
-      } else {
-        return SpreadsheetApp.newRichTextValue().setText(item).build()
-      }
-    })
+  sheet = ss.getSheetByName(sheetName);
+  lastColumn = sheet.getLastColumn();
 
-    issueArray.push(row) */
-  }
-
-  sheet.getRange(2, 1, dataRange.getLastRow(), lastColumn).clearContent();
-  sheet
-    .getRange(2, 1, issueArray.length, issueArray[0].length)
-    .setValues(issueArray);
-
-  sheet.getRange(2, 3, issueArray.length).setRichTextValues(stringIDsAndLinks);
-
+  // Add borders between strings to group issues per string visually
   for (let [index, val] of issues.entries()) {
     if (val.firstForString) {
       sheet
@@ -210,55 +50,184 @@ function overwriteWithIssuesFromCrowdin() {
     }
   }
 
-  sheet
-    .getRange(1, 1, sheet.getMaxRows(), sheet.getMaxColumns())
-    .setFontFamily(fontName)
-    .setFontSize(11);
+  // Apply conditional formatting rules
+  // TODO: Extract the rules to the top/config part of the script
+  const existingRules = sheet.getConditionalFormatRules();
 
-  wrapStrategies.map((strat, col) => {
-    sheet
-      .getRange(2, col + 1, sheet.getDataRange().getLastRow(), 1)
-      .setWrapStrategy(strat);
+  // Hide some repeating data to make the spreadsheet more readable
+  const newRule = SpreadsheetApp.newConditionalFormatRule()
+    .whenFormulaSatisfied("=$C2=$C1")
+    .setFontColor("#ffffff")
+    .setRanges([
+      sheet.getRange(2, 2, sheet.getLastRow(), 1),
+      sheet.getRange(2, 8, sheet.getLastRow(), 1),
+      sheet.getRange(2, 10, sheet.getLastRow(), 1),
+    ])
+    .build();
+
+  sheet.setConditionalFormatRules([...existingRules, newRule]);
+
+  logMessage("Successfully overwrote the sheet with issues from Crowdin.");
+}
+
+function createSourceIssuesSheet(issues) {
+  const sourceMistakes = issues.filter(
+    (issue) => issue.type === "Source mistake"
+  );
+
+  if (sourceMistakes.length > 0) {
+    const sheetName = ISSUES_SHEET_NAME_SOURCE;
+
+    createOrUpdateSheet(sheetName, sourceMistakes);
+
+    logMessage("Created/updated Source Issues sheet.");
+  }
+}
+
+function createContextAndGeneralQuestionsSheet(issues) {
+  const contextAndGeneralQuestions = issues.filter(
+    (issue) =>
+      issue.type === "Context request" || issue.type === "General question"
+  );
+
+  if (contextAndGeneralQuestions.length > 0) {
+    const sheetName = ISSUES_SHEET_NAME_CONTEXT;
+
+    createOrUpdateSheet(sheetName, contextAndGeneralQuestions);
+
+    logMessage("Created/updated Context and General Questions sheet.");
+  }
+}
+
+function createLanguageSheets(issues) {
+  const translationMistakes = issues.filter(
+    (issue) => issue.type === "Translation mistake"
+  );
+
+  const issuesByLanguage = groupIssuesByLanguage(translationMistakes);
+
+  for (const [language, languageIssues] of issuesByLanguage.entries()) {
+    const sheetName = ISSUES_SHEET_NAME_LANG.replace("%lang%", language);
+
+    createOrUpdateSheet(sheetName, languageIssues);
+
+    logMessage(`Created/updated sheet for language: ${language}`);
+  }
+}
+
+function groupIssuesByLanguage(issues) {
+  const issuesByLanguage = new Map();
+
+  for (const issue of issues) {
+    const language = issue.language || "Unknown";
+
+    if (!issuesByLanguage.has(language)) {
+      issuesByLanguage.set(language, []);
+    }
+
+    issuesByLanguage.get(language).push(issue);
+  }
+
+  return issuesByLanguage;
+}
+
+function createOrUpdateSheet(sheetName, issues) {
+  let sheet = ss.getSheetByName(sheetName);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+  }
+
+  // Prepare data for the sheet
+  const issueArray = [];
+  const stringIDsAndLinks = [];
+
+  issues.forEach((issue) => {
+    issueArray.push([
+      issue.id,
+      issue.fileIDandName,
+      issue.stringID,
+      issue.date,
+      issue.user,
+      issue.status,
+      issue.type,
+      issue.stringText,
+      issue.text,
+      issue.context,
+    ]);
+
+    stringIDsAndLinks.push([
+      prepareIssueLinks(issue, ADD_LINK_URL, ADD_LINK_TEXT, ADD_LINK),
+    ]);
   });
 
-  colFontColors.map((color, col) => {
-    sheet
-      .getRange(2, col + 1, sheet.getDataRange().getLastRow(), 1)
-      .setFontColor(color);
+  const totalRows = issueArray.length + 1; // Include header row
+  const totalColumns = header[0].length;
+
+  // Resize the sheet only if necessary
+  if (sheet.getMaxRows() < totalRows) {
+    sheet.insertRowsAfter(sheet.getMaxRows(), totalRows - sheet.getMaxRows());
+  }
+  if (sheet.getMaxColumns() < totalColumns) {
+    sheet.insertColumnsAfter(
+      sheet.getMaxColumns(),
+      totalColumns - sheet.getMaxColumns()
+    );
+  }
+
+  // Reset formatting for the entire sheet
+  sheet.getRange(1, 1, sheet.getMaxRows(), sheet.getMaxColumns()).clearFormat();
+
+  // Set headers and data in a single batch
+  sheet
+    .getRange(1, 1, 1, totalColumns)
+    .setValues(header)
+    .setFontColor("#f3f3f3")
+    .setBackground("#434343")
+    .setFontWeight("bold");
+  sheet.getRange(2, 1, issueArray.length, totalColumns).setValues(issueArray);
+
+  // Set rich text links for the string ID column
+  sheet.getRange(2, 3, issueArray.length).setRichTextValues(stringIDsAndLinks);
+
+  // Apply column widths explicitly
+  colWidths.forEach((width, col) => {
+    sheet.setColumnWidth(col + 1, width);
+  });
+
+  // Apply formatting in bulk
+  const dataRange = sheet.getRange(1, 1, totalRows, totalColumns);
+  dataRange.setFontFamily(fontName).setFontSize(11);
+
+  wrapStrategies.forEach((strat, col) => {
+    sheet.getRange(2, col + 1, issueArray.length, 1).setWrapStrategy(strat);
+  });
+
+  colFontColors.forEach((color, col) => {
+    sheet.getRange(2, col + 1, issueArray.length, 1).setFontColor(color);
   });
 
   // Apply conditional formatting rules
-  // TODO: Extract the rules to the top/config part of the script
   sheet.setConditionalFormatRules([
-    // Highlight Source mistakes
+    // Highlight open issues
     SpreadsheetApp.newConditionalFormatRule()
-      .whenFormulaSatisfied('=AND($F2="Open",$G2="Source Mistake")')
-      .setBackground("#fff2cc")
-      .setRanges([sheet.getRange(2, 1, sheet.getLastRow(), 10)])
-      .build(),
-    // Hide (white font color) duplicate text in File, String, Context
-    SpreadsheetApp.newConditionalFormatRule()
-      .whenFormulaSatisfied("=$C2=$C1")
-      .setFontColor("#ffffff")
-      .setRanges([
-        sheet.getRange(2, 2, sheet.getLastRow(), 1),
-        sheet.getRange(2, 8, sheet.getLastRow(), 1),
-        sheet.getRange(2, 10, sheet.getLastRow(), 1),
-      ])
+      .whenFormulaSatisfied('=$F2="Open"')
+      .setBackground(OPEN_ISSUE_COLOR)
+      .setRanges([sheet.getRange(2, 1, sheet.getLastRow(), totalColumns)])
       .build(),
   ]);
+
+  // Remove extra rows and columns if necessary
+  if (sheet.getMaxRows() > totalRows) {
+    sheet.deleteRows(totalRows + 1, sheet.getMaxRows() - totalRows);
+  }
+  if (sheet.getMaxColumns() > totalColumns) {
+    sheet.deleteColumns(totalColumns + 1, sheet.getMaxColumns() - totalColumns);
+  }
 
   // Recreate filter to cover the whole range
   if (sheet.getFilter()) {
     sheet.getFilter().remove();
   }
   sheet.getDataRange().createFilter();
-
-  logMessage("Successfully overwrote the sheet with issues from Crowdin.");
-
-  // Create language-specific sheets
-  createLanguageSheets(issues);
-
-  // Create source issues sheet
-  createSourceIssuesSheet(issues);
 }
