@@ -10,6 +10,7 @@ function getOrCreateLogsSheet() {
 }
 
 function logMessage(message) {
+  Logger.log(message);
   const logsSheet = getOrCreateLogsSheet();
   logsSheet.insertRowBefore(2);
   logsSheet.getRange(2, 1, 1, 2).setValues([[new Date(), message]]);

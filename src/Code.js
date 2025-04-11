@@ -3,7 +3,7 @@ var org = null; // Replace with your organization name or leave blank if you're 
 var projectID = null; // Replace with Project ID (under Tools → API on Crowdin)
 var token = null;
 // Leave empty and users will be prompted for it, and it'll be saved (per user)
-// You can also set or delete this via Set or Delete API Key in Loc Tools menu
+// You can also set or delete this via Set or Delete API token in Loc Tools menu
 // --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 // You can also hardcode your token here but it's very insecure
 // Hardcoded values take precedence over values set via menu
@@ -102,8 +102,10 @@ function onOpen() {
       "overwriteWithIssuesFromCrowdin"
     )
     .addSeparator()
-    .addItem("Set Crowdin API key (current Google user)", "setAPIKey")
-    .addItem("Set Crowdin API key (document-wide)", "setDocAPIKey")
+    .addItem("Set Crowdin API token (current Google user)", "setAPIKey")
+    .addItem("Set Crowdin API token (document-wide)", "setDocAPIKey")
+    .addItem("Delete API tokens (user and document-wide)", "deleteAPIKey")
+    .addSeparator()
     .addItem("View or set Crowdin project ID (all users)", "setProjectID")
     .addItem("View or set Crowdin org (all users)", "setOrg")
     .addToUi();
@@ -118,7 +120,6 @@ function checkAPICredentials() {
     setOrg();
     org = scriptProperties.getProperty("crowdinOrg");
     if (org == null) {
-      Logger.log("Error: Couldn't get the organization name from the user");
       logMessage("Error: Couldn't get the organization name from the user");
       ui.alert(
         "Error: We need a valid or empty organization name to fetch data from Crowdin. Please try again."
@@ -131,7 +132,6 @@ function checkAPICredentials() {
     setProjectID();
     projectID = scriptProperties.getProperty("crowdinProjectID");
     if (projectID == null) {
-      Logger.log("Error: Couldn't get the project ID from the user");
       logMessage("Error: Couldn't get the project ID from the user");
       ui.alert(
         "Error: We need a valid project ID to fetch data from Crowdin. Please try again."
@@ -144,7 +144,6 @@ function checkAPICredentials() {
     setAPIKey();
     token = userProperties.getProperty("crowdinAPIKey");
     if (token == null) {
-      Logger.log("Error: Couldn't get the API token from the user");
       logMessage("Error: Couldn't get the API token from the user");
       ui.alert(
         "Error: We need a valid token to fetch data from Crowdin. Please try again."
@@ -165,8 +164,7 @@ function setAPIKey() {
   var button = result.getSelectedButton();
   if (button === ui.Button.OK) {
     userProperties.setProperty("crowdinAPIKey", result.getResponseText());
-    Logger.log("API key saved");
-    logMessage("API key saved");
+    logMessage("API token saved");
   }
 }
 
@@ -178,21 +176,20 @@ function setDocAPIKey() {
   var button = result.getSelectedButton();
   if (button === ui.Button.OK) {
     scriptProperties.setProperty("crowdinDocAPIKey", result.getResponseText());
-    Logger.log("Document-wide API key saved");
-    logMessage("Document-wide API key saved");
+    logMessage("Document-wide API token saved");
   }
 }
 
 function deleteAPIKey() {
   var result = ui.prompt(
-    "Are you sure you want to delete the API key? (it will be deleted for all users)",
+    "Are you sure you want to delete the API token? (it will be deleted for you and all users)",
     ui.ButtonSet.YES_NO
   );
   var button = result.getSelectedButton();
   if (button === ui.Button.YES) {
     userProperties.deleteProperty("crowdinAPIKey");
-    Logger.log("API key deleted");
-    logMessage("API key deleted");
+    scriptProperties.deleteProperty("crowdinDocAPIKey");
+    logMessage("API token deleted for you and all users");
   }
 }
 
@@ -205,7 +202,6 @@ function setProjectID() {
   var button = result.getSelectedButton();
   if (button === ui.Button.OK) {
     scriptProperties.setProperty("crowdinProjectID", result.getResponseText());
-    Logger.log("Project ID saved");
     logMessage("Project ID saved");
   }
 }
@@ -222,7 +218,6 @@ function setOrg() {
   var button = result.getSelectedButton();
   if (button === ui.Button.OK) {
     scriptProperties.setProperty("crowdinOrg", result.getResponseText());
-    Logger.log("Organization name saved");
     logMessage("Organization name saved");
   }
 }
