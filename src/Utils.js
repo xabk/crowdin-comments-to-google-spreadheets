@@ -44,7 +44,10 @@ function prepareIssueLinks(
   addLinkText,
   addLinkEnabled
 ) {
-  const stringLink = issue.link.replace("-XX#", `-${issue.language}#`);
+  const stringLink = issue.link.replace(
+    "-XX#",
+    `-${issue.language.toLowerCase()}#`
+  );
   const addLink = addLinkUrlTemplate
     ? addLinkUrlTemplate
         .replace("%term%", issue.stringKey || "")
