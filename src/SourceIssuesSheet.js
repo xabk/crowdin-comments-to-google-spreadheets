@@ -1,12 +1,10 @@
-function createLanguageSheets(issues) {
-  const translationMistakes = issues.filter(
-    (issue) => issue.type === "Translation mistake"
+function createSourceIssuesSheet(issues) {
+  const sourceMistakes = issues.filter(
+    (issue) => issue.type === "Source mistake"
   );
 
-  const issuesByLanguage = groupIssuesByLanguage(translationMistakes);
-
-  for (const [language, languageIssues] of issuesByLanguage.entries()) {
-    const sheetName = ISSUES_SHEET_NAME_LANG.replace("%lang%", language);
+  if (sourceMistakes.length > 0) {
+    const sheetName = ISSUES_SHEET_NAME_SOURCE;
     let sheet = ss.getSheetByName(sheetName);
 
     if (!sheet) {
@@ -14,13 +12,10 @@ function createLanguageSheets(issues) {
     }
 
     // Prepare data for the sheet
-    const issueArray = languageIssues.map((issue) => [
+    const issueArray = sourceMistakes.map((issue) => [
       issue.id,
       issue.fileIDandName,
-      `=HYPERLINK("${issue.link.replace(
-        "/en-XX",
-        `/en-${issue.language.toLowerCase()}`
-      )}", "${issue.stringID}")`, // Adjust link for language
+      `=HYPERLINK("${issue.link}", "${issue.stringID}")`,
       issue.date,
       issue.user,
       issue.status,
@@ -96,22 +91,6 @@ function createLanguageSheets(issues) {
       );
     }
 
-    logMessage(`Created/updated sheet for language: ${language}`);
+    logMessage("Created/updated Source Issues sheet.");
   }
-}
-
-function groupIssuesByLanguage(issues) {
-  const issuesByLanguage = new Map();
-
-  for (const issue of issues) {
-    const language = issue.language || "Unknown";
-
-    if (!issuesByLanguage.has(language)) {
-      issuesByLanguage.set(language, []);
-    }
-
-    issuesByLanguage.get(language).push(issue);
-  }
-
-  return issuesByLanguage;
 }

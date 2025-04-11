@@ -15,8 +15,11 @@ var token = null;
 // Script Parameters
 // ===========================================================
 
-const logsSheetName = "Logs";
-const issuesSheetName = "All Issues";
+const LOGS_SHEET_NAME = "Logs";
+const ISSUES_SHEET_NAME_ALL = "All Issues";
+const ISSUES_SHEET_NAME_LANG = "Translation Issues (%lang%)"; // %lang% will be replaced with the language code
+const ISSUES_SHEET_NAME_SOURCE = "Source Issues";
+const ISSUES_SHEET_NAME_CONTEXT = "General and Context Requests";
 
 const fontName = "Calibri";
 

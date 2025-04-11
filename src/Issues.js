@@ -1,7 +1,7 @@
 function getOrCreateAllIssuesSheet() {
-  let allIssuesSheet = ss.getSheetByName(issuesSheetName);
+  let allIssuesSheet = ss.getSheetByName(ISSUES_SHEET_NAME_ALL);
   if (!allIssuesSheet) {
-    allIssuesSheet = ss.insertSheet(issuesSheetName);
+    allIssuesSheet = ss.insertSheet(ISSUES_SHEET_NAME_ALL);
   }
   return allIssuesSheet;
 }
@@ -258,4 +258,7 @@ function overwriteWithIssuesFromCrowdin() {
 
   // Create language-specific sheets
   createLanguageSheets(issues);
+
+  // Create source issues sheet
+  createSourceIssuesSheet(issues);
 }
