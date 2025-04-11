@@ -12,7 +12,7 @@ function overwriteWithIssuesFromCrowdin() {
   }
 
   // Create or update the main issues sheet
-  createAllISsuesSheet(issues);
+  createAllIssuesSheet(issues);
 
   // Create source issues sheet
   createSourceIssuesSheet(issues);
@@ -24,7 +24,7 @@ function overwriteWithIssuesFromCrowdin() {
   createLanguageSheets(issues);
 }
 
-function createAllAIssuesSheet(issues) {
+function createAllIssuesSheet(issues) {
   sheetName = ISSUES_SHEET_NAME_ALL;
 
   createOrUpdateSheet(sheetName, issues);
