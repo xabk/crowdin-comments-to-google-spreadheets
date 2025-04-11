@@ -135,7 +135,7 @@ function createOrUpdateSheet(sheetName, issues) {
   let sheet = ss.getSheetByName(sheetName);
 
   if (!sheet) {
-    sheet = ss.insertSheet(sheetName);
+    sheet = ss.insertSheet(sheetName, ss.getSheets().length);
   }
 
   // Prepare data for the sheet

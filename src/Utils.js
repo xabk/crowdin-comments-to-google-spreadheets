@@ -3,7 +3,12 @@ function prettylog(object) {
 }
 
 function decodeHTMLEntities(string) {
-  return string.replace(/&quot;/g, '"').replace(/&amp;/g, "&");
+  return string
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&#39;/g, "'");
   // return XmlService.parse(`<d>${string}</d>`).getRootElement().getText() // Doesn't work with Unreal rich text tags (<hunter>...</>)
 }
 
